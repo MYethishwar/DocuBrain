@@ -1,0 +1,21 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /ask",
+  "rawPath": "/ask",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/ask",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "lambda-console-test"
+    },
+    "stage": "$default"
+  },
+  "body": "{\"question\": \"When did the Zero Hour start?\"}",
+  "isBase64Encoded": false
+}

@@ -1,0 +1,49 @@
+# ── Secrets & local config ────────────────────────────────
+# Real values live in SSM / Secrets Manager. Commit only the .env.example files.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.aws/
+
+# ── Python (backend) ──────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Lambda build output (recreate with backend/build_lambda.ps1)
+backend/build/
+backend/dist/
+
+# ── Node / React (frontend) ───────────────────────────────
+node_modules/
+frontend/dist/
+*.zip
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+
+# ── Office temp / lock files ──────────────────────────────
+~$*
+
+# ── Editors & OS ──────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Claude Code personal settings ─────────────────────────
+.claude/settings.local.json
+
+# ── Logs ──────────────────────────────────────────────────
+*.log

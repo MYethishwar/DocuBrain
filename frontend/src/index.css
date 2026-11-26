@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  /* Display: characterful headings. Body: built for reading clarity. */
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+
+  /* Ink: deep navy neutrals */
+  --color-ink-950: #07080f;
+  --color-ink-900: #0a0c14;
+  --color-ink-850: #0e111b;
+  --color-ink-800: #131725;
+  --color-ink-700: #1b2031;
+  --color-ink-600: #282e44;
+  --color-ink-400: #6c7393;
+  --color-ink-300: #9ea5c2;
+  --color-ink-100: #e8eaf3;
+
+  /* Accents */
+  --color-signal: #c6f45b; /* primary: signal lime */
+  --color-iris: #8b7cff; /* secondary glow */
+  --color-coral: #ff6f61; /* guardrail block */
+  --color-amber: #ffb547; /* errors */
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-900 font-sans text-ink-100 antialiased;
+  font-size: 16px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-signal) 35%, transparent);
+}
+
+/* Thin, quiet scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-600) transparent;
+}
