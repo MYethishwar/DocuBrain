@@ -34,7 +34,9 @@ backend/
 │   ├── clients/
 │   │   ├── ssm_client.py              Parameter Store calls only
 │   │   ├── knowledge_base_client.py   Bedrock Knowledge Base Retrieve only
-│   │   └── model_client.py            Bedrock Converse (model + guardrail) only
+│   │   ├── model_client.py            Bedrock Converse (model + guardrail) only
+│   │   ├── guardrail_client.py        standalone ApplyGuardrail (used in Ollama mode)
+│   │   └── ollama_client.py           local open-source model via Ollama's HTTP API
 │   ├── services/kb_service.py     business logic
 │   ├── routers/
 │   │   ├── ask_router.py          POST /ask
@@ -66,6 +68,20 @@ and uses `.env` for everything. Values are read once per process and cached.
 | Guardrail version | `/docubrain/guardrail-version` | `GUARDRAIL_VERSION` |
 | Model ARN | `/docubrain/model-arn` | `MODEL_ARN` |
 
+### Model provider
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `MODEL_PROVIDER` | `bedrock` | `bedrock`: Retrieve → Converse with the guardrail attached. `ollama`: ApplyGuardrail (input) → Retrieve → local Ollama model → ApplyGuardrail (output, with contextual grounding) |
+| `OLLAMA_URL` | `http://localhost:11434` | Ollama server |
+| `OLLAMA_MODEL` | `llama3.2:3b` | Model pulled with `ollama pull` |
+| `OLLAMA_MAX_CHUNKS` | `3` | Passages sent to Ollama (fewer = faster on CPU) |
+| `OLLAMA_TIMEOUT_SECONDS` | `180` | Request timeout |
+
+In both modes the knowledge base and the guardrail are the AWS ones. Ollama mode is for running the
+backend locally; the startup log shows which provider is active, for example
+`DocuBrain API ready (model_provider=ollama [llama3.2:3b], ...)`.
+
 Optional environment variables: `AWS_REGION` (default `ap-southeast-2`, set automatically on Lambda),
 `PARAM_PREFIX` (default `/docubrain`), `CORS_ORIGINS` (default `*`; set to the React app URL later),
 `LOG_LEVEL` (default `INFO`).
@@ -88,7 +104,7 @@ On Lambda these lines appear in **CloudWatch Logs** (Monitor tab → View CloudW
 | Method | Path | Body | Response |
 |---|---|---|---|
 | GET | `/health` | — | `{"status": "ok"}` |
-| POST | `/ask` | `{"question": "When did the Zero Hour start?"}` | `{"question", "answer", "guardrail_action": "NONE" \| "INTERVENED", "sources": [...]}` |
+| POST | `/ask` | `{"question": "When did the Zero Hour start?"}` | `{"question", "answer", "guardrail_action": "NONE" \| "INTERVENED" \| "MASKED", "sources": [...]}` |
 
 ## Run locally
 

@@ -133,11 +133,12 @@ sequenceDiagram
 
 | Status | Meaning |
 |---|---|
-| `200` | Answered, or blocked by the guardrail (`guardrail_action` says which) |
+| `200` | Answered, or blocked by the guardrail. `guardrail_action` is `NONE`, `INTERVENED` (blocked) or `MASKED` (answered with parts masked) |
 | `422` | Invalid question (empty or longer than 1,000 characters) |
 | `429` | AWS throttled the model (quota or rate limit) |
 | `500` | Settings missing from both SSM and `.env` |
 | `502` | Another AWS error (for example, access denied) |
+| `503` | Ollama mode: the local Ollama server isn't reachable |
 
 ---
 
@@ -219,7 +220,9 @@ DocuBrain/
 │   │   ├── clients/
 │   │   │   ├── ssm_client.py                    Parameter Store
 │   │   │   ├── knowledge_base_client.py         Bedrock Knowledge Base Retrieve
-│   │   │   └── model_client.py                  Bedrock Converse with guardrail
+│   │   │   ├── model_client.py                  Bedrock Converse with guardrail
+│   │   │   ├── guardrail_client.py              standalone ApplyGuardrail (Ollama mode)
+│   │   │   └── ollama_client.py                 local open-source model via Ollama
 │   │   ├── services/kb_service.py               retrieve → generate → sources / guardrail result
 │   │   ├── routers/                             POST /ask, GET /health
 │   │   ├── schemas/ask_schema.py                request and response models
@@ -351,6 +354,54 @@ npm run dev
 
 Open http://localhost:5173.
 
+### Use a local open-source model (Ollama) instead of a Bedrock model
+
+If your AWS account has no Bedrock model quota (for example on the AWS Free plan), a local
+[Ollama](https://ollama.com) model can write the answers instead. **The knowledge base and the guardrail
+still run on AWS**: only text generation moves to your machine.
+
+```mermaid
+flowchart LR
+    Q["Question"] --> G1{{"ApplyGuardrail<br/>INPUT"}}
+    G1 -->|blocked| B["Blocked by guardrail"]
+    G1 -->|allowed| R[("Bedrock KB<br/>Retrieve")]
+    R --> O["Ollama<br/>llama3.2:3b (local)"]
+    O --> G2{{"ApplyGuardrail OUTPUT<br/>+ contextual grounding"}}
+    G2 -->|blocked| B
+    G2 -->|allowed| A["Answer + sources"]
+```
+
+1. Install [Ollama](https://ollama.com) and pull a model:
+   ```powershell
+   ollama pull llama3.2:3b
+   ```
+2. In `backend/.env`:
+   ```
+   MODEL_PROVIDER=ollama
+   OLLAMA_MODEL=llama3.2:3b
+   OLLAMA_MAX_CHUNKS=3
+   ```
+3. Start the backend (see above), then point the web app at it with `frontend/.env.local`:
+   ```
+   VITE_API_URL=http://localhost:8000
+   ```
+4. `npm run dev` in `frontend/` and open http://localhost:5173.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `MODEL_PROVIDER` | `bedrock` | `bedrock` (Converse with guardrail attached) or `ollama` (ApplyGuardrail before and after) |
+| `OLLAMA_URL` | `http://localhost:11434` | Ollama server |
+| `OLLAMA_MODEL` | `llama3.2:3b` | Any model you have pulled (`ollama list`) |
+| `OLLAMA_MAX_CHUNKS` | `3` | Passages sent to the model; fewer is much faster on a CPU |
+| `OLLAMA_TIMEOUT_SECONDS` | `180` | How long to wait for an answer |
+
+On a CPU-only laptop (16 GB RAM), `llama3.2:3b` answers in about **25 seconds** once loaded; the first
+question after starting takes about a minute while the model loads. `llama3.2:1b` is faster but less accurate.
+Ollama answers one request at a time, so questions sent together wait in line.
+
+Ollama runs on your machine, so this mode works with the **local** backend. The deployed Lambda can't
+reach your laptop; it keeps using `MODEL_PROVIDER=bedrock`.
+
 ### Regenerate the README screenshots
 With the dev server running, in a second terminal:
 
@@ -402,10 +453,10 @@ INFO    | src.docubrain_server | POST /ask -> 200 (2690 ms)
 
 ## Known limitations and roadmap
 
-**Current limitation:** on the demo account (AWS Free plan) every Bedrock model's token quota is **0**. The knowledge base, guardrail, Lambda, API Gateway and web app all work, but answer generation returns `429` until the account has model access. The screenshots above use sample responses for that reason.
+**Current limitation:** on the demo account (AWS Free plan) every Bedrock model's token quota is **0**. The knowledge base, guardrail, Lambda, API Gateway and web app all work, but Bedrock answer generation returns `429` until the account has model access. The screenshots above use sample responses for that reason. Locally, the [Ollama mode](#use-a-local-open-source-model-ollama-instead-of-a-bedrock-model) gives real, guardrail-checked answers from the knowledge base today.
 
 **Roadmap**
-- An answer mode that works without a Bedrock model: return the retrieved passages directly, still checked by `ApplyGuardrail`.
+- Host Ollama where the Lambda can reach it, so the deployed site can use an open-source model.
 - Optional external model provider, with its API key in AWS Secrets Manager.
 - Streaming answers.
 - User sign-in with Amazon Cognito and an API Gateway authorizer.

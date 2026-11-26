@@ -2,6 +2,7 @@
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException
 
+from src.clients.ollama_client import OllamaError
 from src.config.settings import ConfigurationError
 from src.schemas.ask_schema import AskRequest, AskResponse
 from src.services import kb_service
@@ -18,6 +19,9 @@ def ask(request: AskRequest) -> AskResponse:
     except ConfigurationError as error:
         logger.error("Cannot answer /ask: server is not configured (%s)", error)
         raise HTTPException(status_code=500, detail="Server configuration error")
+    except OllamaError as error:
+        logger.error("Cannot answer /ask: local model unavailable (%s)", error)
+        raise HTTPException(status_code=503, detail=str(error))
     except ClientError as error:
         code = error.response["Error"]["Code"]
         logger.error("Cannot answer /ask: AWS call failed (%s)", code)

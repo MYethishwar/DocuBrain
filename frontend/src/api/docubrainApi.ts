@@ -44,6 +44,8 @@ function friendlyMessage(status: number): string {
       return "The server isn't configured correctly. Check the backend logs.";
     case 502:
       return "The knowledge base didn't respond. Please try again in a moment.";
+    case 503:
+      return "The local model isn't running. Start Ollama and try again.";
     default:
       return `Something went wrong (error ${status}). Please try again.`;
   }

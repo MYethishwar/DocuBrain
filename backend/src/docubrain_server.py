@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 
-from src.config.settings import AWS_REGION, CORS_ORIGINS, PARAM_PREFIX
+from src.config.settings import AWS_REGION, CORS_ORIGINS, MODEL_PROVIDER, OLLAMA_MODEL, PARAM_PREFIX
 from src.routers import ask_router, health_router
 from src.utils.logger import get_logger
 
@@ -45,6 +45,7 @@ app.include_router(ask_router.router)
 handler = Mangum(app)
 
 logger.info(
-    "DocuBrain API ready (region=%s, ssm_prefix=%s, cors_origins=%s)",
+    "DocuBrain API ready (model_provider=%s%s, region=%s, ssm_prefix=%s, cors_origins=%s)",
+    MODEL_PROVIDER, f" [{OLLAMA_MODEL}]" if MODEL_PROVIDER == "ollama" else "",
     AWS_REGION, PARAM_PREFIX, CORS_ORIGINS,
 )

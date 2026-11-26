@@ -15,6 +15,7 @@ export interface ChatMessage {
 export interface AskResponse {
   question: string;
   answer: string;
-  guardrail_action: "NONE" | "INTERVENED";
+  /** NONE = answered, INTERVENED = blocked, MASKED = answered with parts masked by the guardrail */
+  guardrail_action: "NONE" | "INTERVENED" | "MASKED";
   sources: string[];
 }

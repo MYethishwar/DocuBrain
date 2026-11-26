@@ -21,6 +21,19 @@ AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")
 PARAM_PREFIX = os.getenv("PARAM_PREFIX", "/docubrain")
 CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",")]
 
+# Which model writes the answers:
+#   "bedrock" - a Bedrock model via Converse (MODEL_ARN); guardrail attached to the call
+#   "ollama"  - a local open-source model via Ollama; guardrail applied with ApplyGuardrail
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "bedrock").strip().lower()
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+OLLAMA_TIMEOUT_SECONDS = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "180"))
+# Fewer passages = shorter prompt = much faster answers on a CPU-only machine.
+OLLAMA_MAX_CHUNKS = int(os.getenv("OLLAMA_MAX_CHUNKS", "3"))
+
+if MODEL_PROVIDER not in ("bedrock", "ollama"):
+    raise ValueError(f"MODEL_PROVIDER must be 'bedrock' or 'ollama', got '{MODEL_PROVIDER}'")
+
 # setting name -> (SSM parameter name suffix, .env variable name)
 _SOURCES = {
     "kb_id": ("kb-id", "KB_ID"),

@@ -11,5 +11,6 @@ class AskRequest(BaseModel):
 class AskResponse(BaseModel):
     question: str
     answer: str
-    guardrail_action: Literal["NONE", "INTERVENED"]
+    # NONE = answered, INTERVENED = blocked by the guardrail, MASKED = answered with parts masked
+    guardrail_action: Literal["NONE", "INTERVENED", "MASKED"]
     sources: list[str]

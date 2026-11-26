@@ -47,6 +47,17 @@ npm run dev
 
 Open http://localhost:5173. API Gateway CORS must allow this origin.
 
+## Regenerate the README screenshots
+
+With `npm run dev` running, in a second terminal:
+
+```powershell
+npm run screenshots
+```
+
+`scripts/capture-screenshots.mjs` drives your local Edge or Chrome with Playwright, answers `/ask` with
+sample responses, and saves the PNGs to `../docs/images/`. Set `BROWSER_PATH` to use another browser.
+
 ## Build for hosting
 
 ```powershell
